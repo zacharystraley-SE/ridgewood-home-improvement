@@ -1212,7 +1212,10 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
+    <script type="module">
+        import EmailJS from 'https://esm.sh/@emailjs/browser@4.0.0';
+        window.emailjs = EmailJS;
+    </script>
     <script>
         // Wait for EmailJS to load, then initialize (with longer timeout)
         function initEmailJS() {
