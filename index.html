@@ -1103,22 +1103,24 @@
                     <p style="color: var(--accent-green); font-weight: bold; margin-top: 10px;">Your first consultation is completely FREE.</p>
                 </div>
             </div>
-            <form class="contact-form" onsubmit="handleFormSubmit(event)" action="https://formspree.io/f/xkoyrrvl" method="POST">
+            <form class="contact-form" onsubmit="handleFormSubmit(event)" action="https://formsubmit.co/el/zesabo" method="POST">
+                <input type="hidden" name="_subject" value="New Contact Form Submission from Ridgewood Website">
+                <input type="hidden" name="_captcha" value="false">
                 <div class="form-group">
                     <label>Name</label>
-                    <input type="text" required>
+                    <input type="text" name="name" required>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" required>
+                    <input type="email" name="email" required>
                 </div>
                 <div class="form-group">
                     <label>Phone</label>
-                    <input type="tel" required>
+                    <input type="tel" name="phone" required>
                 </div>
                 <div class="form-group">
                     <label>Service Interested In</label>
-                    <select required>
+                    <select name="service" required>
                         <option value="">Select a service</option>
                         <option value="kitchen">Kitchen Remodeling</option>
                         <option value="bathroom">Bathroom Remodeling</option>
@@ -1132,7 +1134,7 @@
                 </div>
                 <div class="form-group">
                     <label>Message</label>
-                    <textarea required></textarea>
+                    <textarea name="message" required></textarea>
                 </div>
                 <button type="submit" class="form-submit">Send Message</button>
             </form>
@@ -1177,22 +1179,24 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
             <h2 style="color: var(--text-dark); margin-bottom: 25px;">Request a Free Consultation</h2>
-            <form onsubmit="handleQuoteSubmit(event)" action="https://formspree.io/f/REPLACE_WITH_YOUR_ID" method="POST">
+            <form onsubmit="handleQuoteSubmit(event)" action="https://formsubmit.co/el/zesabo" method="POST">
+                <input type="hidden" name="_subject" value="New Consultation Request from Ridgewood Website">
+                <input type="hidden" name="_captcha" value="false">
                 <div class="form-group">
                     <label>Name</label>
-                    <input type="text" required>
+                    <input type="text" name="name" required>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" required>
+                    <input type="email" name="email" required>
                 </div>
                 <div class="form-group">
                     <label>Phone</label>
-                    <input type="tel" required>
+                    <input type="tel" name="phone" required>
                 </div>
                 <div class="form-group">
                     <label>Service Type</label>
-                    <select required>
+                    <select name="service_type" required>
                         <option value="">Select a service</option>
                         <option value="kitchen">Kitchen Remodeling</option>
                         <option value="bathroom">Bathroom Remodeling</option>
@@ -1205,7 +1209,7 @@
                 </div>
                 <div class="form-group">
                     <label>Tell us about your project</label>
-                    <textarea required></textarea>
+                    <textarea name="project_description" required></textarea>
                 </div>
                 <button type="submit" class="form-submit">Request Consultation</button>
             </form>
@@ -1274,46 +1278,13 @@
         function handleQuoteSubmit(event) {
             event.preventDefault();
             const form = event.target;
-            
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    alert('Thank you for requesting a consultation! We will contact you shortly.');
-                    form.reset();
-                    closeModal();
-                } else {
-                    alert('There was an issue submitting your form. Please try again.');
-                }
-            }).catch(error => {
-                alert('There was an error. Please try again.');
-            });
+            form.submit();
         }
 
         function handleFormSubmit(event) {
             event.preventDefault();
             const form = event.target;
-            
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    alert('Thank you for your message! We will get back to you soon.');
-                    form.reset();
-                } else {
-                    alert('There was an issue submitting your form. Please try again.');
-                }
-            }).catch(error => {
-                alert('There was an error. Please try again.');
-            });
+            form.submit();
         }
 
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
