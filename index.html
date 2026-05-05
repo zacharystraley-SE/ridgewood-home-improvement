@@ -1103,7 +1103,11 @@
                     <p style="color: var(--accent-green); font-weight: bold; margin-top: 10px;">Your first consultation is completely FREE.</p>
                 </div>
             </div>
-            <form class="contact-form" onsubmit="handleFormSubmit(event)" method="POST">
+            <form class="contact-form" action="https://api.web3forms.com/submit" method="POST">
+                <input type="hidden" name="access_key" value="d9c52626-8ab2-453e-9cd5-9414dc9827cb">
+                <input type="hidden" name="subject" value="New Contact Form Submission from Ridgewood Website">
+                <input type="hidden" name="from_name" value="Ridgewood Home Improvement">
+                <input type="hidden" name="redirect" value="https://ridgewoodhomeimprovement.com/?submitted=true">
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" name="name" required>
@@ -1177,7 +1181,11 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
             <h2 style="color: var(--text-dark); margin-bottom: 25px;">Request a Free Consultation</h2>
-            <form onsubmit="handleQuoteSubmit(event)" method="POST">
+            <form action="https://api.web3forms.com/submit" method="POST">
+                <input type="hidden" name="access_key" value="d9c52626-8ab2-453e-9cd5-9414dc9827cb">
+                <input type="hidden" name="subject" value="New Consultation Request from Ridgewood Website">
+                <input type="hidden" name="from_name" value="Ridgewood Home Improvement">
+                <input type="hidden" name="redirect" value="https://ridgewoodhomeimprovement.com/?submitted=true">
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" name="name" required>
@@ -1212,23 +1220,8 @@
         </div>
     </div>
 
-    <script type="module">
-        import EmailJS from 'https://esm.sh/@emailjs/browser@4.0.0';
-        window.emailjs = EmailJS;
-    </script>
+    <script type="text/javascript" src="emailjs.min.js"></script>
     <script>
-        // Wait for EmailJS to load, then initialize (with longer timeout)
-        function initEmailJS() {
-            if (typeof emailjs !== 'undefined') {
-                emailjs.init('t2IEfvkZMAGNnzYmw');
-            } else {
-                setTimeout(initEmailJS, 500);
-            }
-        }
-        
-        // Start initialization immediately
-        initEmailJS();
-
         let currentSlide = 0;
         const slides = document.querySelectorAll('.hero-slide');
         const dots = document.querySelectorAll('.carousel-dot');
