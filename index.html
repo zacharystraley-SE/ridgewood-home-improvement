@@ -1103,9 +1103,11 @@
                     <p style="color: var(--accent-green); font-weight: bold; margin-top: 10px;">Your first consultation is completely FREE.</p>
                 </div>
             </div>
-            <form class="contact-form" onsubmit="handleFormSubmit(event)" action="https://formsubmit.co/el/zesabo" method="POST">
+            <form class="contact-form" action="https://formsubmit.co/el/zesabo" method="POST">
                 <input type="hidden" name="_subject" value="New Contact Form Submission from Ridgewood Website">
                 <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_next" value="https://ridgewoodhomeimprovement.com/?submitted=true">
+                <input type="hidden" name="_template" value="table">
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" name="name" required>
@@ -1179,9 +1181,11 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
             <h2 style="color: var(--text-dark); margin-bottom: 25px;">Request a Free Consultation</h2>
-            <form onsubmit="handleQuoteSubmit(event)" action="https://formsubmit.co/el/zesabo" method="POST">
+            <form action="https://formsubmit.co/el/zesabo" method="POST">
                 <input type="hidden" name="_subject" value="New Consultation Request from Ridgewood Website">
                 <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_next" value="https://ridgewoodhomeimprovement.com/?submitted=true">
+                <input type="hidden" name="_template" value="table">
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" name="name" required>
@@ -1276,15 +1280,11 @@
         }
 
         function handleQuoteSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            form.submit();
+            // Form now submits naturally - no JavaScript needed
         }
 
         function handleFormSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            form.submit();
+            // Form now submits naturally - no JavaScript needed
         }
 
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
