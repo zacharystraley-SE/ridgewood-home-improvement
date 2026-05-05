@@ -1212,10 +1212,17 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/index.min.js" defer></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/index.min.js"></script>
     <script>
-        // Initialize EmailJS
-        emailjs.init('t2IEfvkZMAGNnzYmw');
+        // Wait for EmailJS to load, then initialize
+        function initEmailJS() {
+            if (typeof emailjs !== 'undefined') {
+                emailjs.init('t2IEfvkZMAGNnzYmw');
+            } else {
+                setTimeout(initEmailJS, 100);
+            }
+        }
+        initEmailJS();
 
         let currentSlide = 0;
         const slides = document.querySelectorAll('.hero-slide');
@@ -1279,6 +1286,11 @@
             event.preventDefault();
             const form = event.target;
             
+            if (typeof emailjs === 'undefined') {
+                alert('Email service is loading. Please try again in a moment.');
+                return;
+            }
+            
             emailjs.sendForm('service_fqxjqto', 'template_tvb5by4', form)
                 .then(function() {
                     alert('Thank you for your request! We will contact you soon.');
@@ -1293,6 +1305,11 @@
         function handleFormSubmit(event) {
             event.preventDefault();
             const form = event.target;
+            
+            if (typeof emailjs === 'undefined') {
+                alert('Email service is loading. Please try again in a moment.');
+                return;
+            }
             
             emailjs.sendForm('service_fqxjqto', 'template_tvb5by4', form)
                 .then(function() {
