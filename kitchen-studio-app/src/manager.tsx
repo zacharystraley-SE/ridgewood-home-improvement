@@ -279,7 +279,7 @@ function ManagerApp() {
               <input name="note" defaultValue={editing?.note || ""} maxLength={100} placeholder="Finish, pattern, or product detail" />
             </label>
             <label>
-              Swatch color
+              Swatch color <small>Shown beside the current finish in the customer category menu.</small>
               <input name="swatch" type="color" defaultValue={editing?.swatch || "#778da9"} required />
             </label>
             <label>
