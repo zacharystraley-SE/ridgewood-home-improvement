@@ -1,0 +1,21 @@
+name = "ridgewood-kitchen-studio-api"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+account_id = "cea6b1f810bbb2ed309f78dcb0e7ffda"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ridgewood-kitchen-studio"
+database_id = "c6e6f5e1-e932-4501-8521-fb85e335c3ec"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "ridgewood-kitchen-studio-assets"
+
+[vars]
+ALLOWED_ORIGINS = "https://ridgewoodhomeimprovement.com,https://www.ridgewoodhomeimprovement.com,http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173"
+# ponytail: switch to studio@ridgewoodhomeimprovement.com after Namecheap verifies the Resend DNS records.
+RESEND_FROM_EMAIL = "Kitchen Studio <onboarding@resend.dev>"
+
+[triggers]
+crons = ["17 3 * * *"]

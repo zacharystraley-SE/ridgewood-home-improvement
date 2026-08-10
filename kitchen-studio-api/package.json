@@ -1,0 +1,17 @@
+{
+  "name": "ridgewood-kitchen-studio-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 execute ridgewood-kitchen-studio --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute ridgewood-kitchen-studio --remote --file=schema.sql",
+    "test": "tsc --noEmit && node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260722.1",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.92.0"
+  }
+}

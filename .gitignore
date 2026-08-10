@@ -1,0 +1,5 @@
+node_modules/
+kitchen-studio-api/node_modules/
+kitchen-studio-api/.wrangler/
+.manager-password
+.env*
