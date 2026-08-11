@@ -946,28 +946,33 @@ export function KitchenVisualizer() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#studio" aria-label="Kitchen Studio home">
-          <img className="brand-logo" src={brandMark} alt="" />
-          <span>Kitchen Studio</span>
-        </a>
-        <div className="project-name">
-          <span className="eyebrow">Ridgewood Home Improvement</span>
-          <strong>Kitchen material study</strong>
+        <div className="topbar-inner">
+          <a className="brand" href="#studio" aria-label="Kitchen Studio home">
+            <img className="brand-logo" src={brandMark} alt="" />
+            <span className="brand-copy">
+              <strong className="brand-title">Kitchen Studio</strong>
+              <span className="brand-attribution">Ridgewood Home Improvement</span>
+            </span>
+          </a>
+          <nav className="top-actions" aria-label="Project actions">
+            <div className="top-utilities">
+              <button className="quiet-button new-kitchen-button" onClick={() => { setUploadError(""); setUploadJobId(""); setUploadOpen(true); }}>
+                New kitchen
+              </button>
+              <button className="quiet-button desktop-only" onClick={() => setHelpOpen(!helpOpen)}>
+                How it works
+              </button>
+            </div>
+            <div className="top-commitments">
+              <button className="quiet-button consultation-button" onClick={() => setQuoteOpen(true)}>
+                Request a consultation
+              </button>
+              <button className="primary-button" onClick={() => { setSaveComplete(false); setSaveError(""); setDesignImage(null); setSaveOpen(true); }}>
+                Save my design
+              </button>
+            </div>
+          </nav>
         </div>
-        <nav className="top-actions" aria-label="Project actions">
-          <button className="quiet-button new-kitchen-button" onClick={() => { setUploadError(""); setUploadJobId(""); setUploadOpen(true); }}>
-            New kitchen
-          </button>
-          <button className="quiet-button desktop-only" onClick={() => setHelpOpen(!helpOpen)}>
-            How it works
-          </button>
-          <button className="quiet-button" onClick={() => setQuoteOpen(true)}>
-            Request a consultation
-          </button>
-          <button className="primary-button" onClick={() => { setSaveComplete(false); setSaveError(""); setDesignImage(null); setSaveOpen(true); }}>
-            Save my design
-          </button>
-        </nav>
       </header>
 
       <section className="intro" id="studio">
