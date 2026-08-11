@@ -4,6 +4,7 @@ type Env = {
   MANAGER_PASSWORD_HASH: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
+  LEAD_NOTIFICATION_EMAIL?: string;
   ALLOWED_ORIGINS: string;
 };
 
@@ -56,6 +57,24 @@ function bytesToBase64Url(bytes: Uint8Array) {
   let value = "";
   for (const byte of bytes) value += String.fromCharCode(byte);
   return btoa(value).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+  let value = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    value += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return btoa(value);
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[character] || character);
 }
 
 function base64ToBytes(value: string) {
@@ -300,33 +319,115 @@ async function reorderMaterials(request: Request, env: Env) {
 }
 
 async function saveDesign(request: Request, env: Env) {
-  const body = await readJson(request);
-  const email = typeof body?.email === "string" ? body.email.trim() : "";
-  const name = typeof body?.name === "string" ? body.name.trim() : "";
-  const finishes = Array.isArray(body?.finishes) ? body.finishes : [];
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !name || name.length > 80 || finishes.length !== 6) {
-    return json(request, env, { error: "Enter a valid email, design name, and six finishes." }, 400);
-  }
-  if (!(await publicSubmissionAllowed(request, env, "email", 5, 60 * 60 * 1000))) {
-    return json(request, env, { error: "Too many email requests. Try again later." }, 429);
-  }
-  if (!env.RESEND_API_KEY) return json(request, env, { error: "Email delivery is not configured." }, 503);
-  const lines = finishes.map((finish) => {
-    const item = finish as Record<string, unknown>;
-    return `${String(item.label || "Finish").slice(0, 40)}: ${String(item.name || "").slice(0, 60)}`;
-  });
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: env.RESEND_FROM_EMAIL || "Kitchen Studio <onboarding@resend.dev>",
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const contentType = request.headers.get("Content-Type") || "";
+  if (!contentType.includes("multipart/form-data")) {
+    const body = await readJson(request);
+    const email = typeof body?.email === "string" ? body.email.trim() : "";
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const finishes = Array.isArray(body?.finishes) ? body.finishes : [];
+    if (!emailPattern.test(email) || !name || name.length > 80 || finishes.length !== 6) {
+      return json(request, env, { error: "Enter a valid email, design name, and six finishes." }, 400);
+    }
+    if (!(await publicSubmissionAllowed(request, env, "email", 5, 60 * 60 * 1000))) {
+      return json(request, env, { error: "Too many email requests. Try again later." }, 429);
+    }
+    if (!env.RESEND_API_KEY) return json(request, env, { error: "Email delivery is not configured." }, 503);
+    const lines = finishes.map((finish) => {
+      const item = finish as Record<string, unknown>;
+      return `${String(item.label || "Finish").slice(0, 40)}: ${String(item.name || "").slice(0, 60)}`;
+    });
+    const response = await sendEmail(env, {
       to: [email],
       subject: `${name} — your saved Kitchen Studio palette`,
-      text: [`Your kitchen design “${name}” is saved.`, "", ...lines, "", "Return to Ridgewood Kitchen Studio on this device to continue designing."].join("\n"),
+      text: [`Your kitchen design “${name}” is saved.`, "", ...lines].join("\n"),
+    });
+    if (!response.ok) return json(request, env, { error: "The email could not be sent." }, 502);
+    return json(request, env, { sent: true, leadNotified: false, customerEmailed: true });
+  }
+
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return json(request, env, { error: "The design submission could not be read." }, 400);
+  }
+  const name = String(form.get("name") || "").trim();
+  const email = String(form.get("email") || "").trim();
+  const phone = String(form.get("phone") || "").trim();
+  const submissionId = String(form.get("submission_id") || "").trim();
+  const image = form.get("image");
+  let finishes: Array<{ label: string; name: string }> = [];
+  try {
+    const parsed = JSON.parse(String(form.get("finishes") || "[]"));
+    if (Array.isArray(parsed)) {
+      finishes = parsed.map((finish) => ({
+        label: String(finish?.label || "").trim().slice(0, 40),
+        name: String(finish?.name || "").trim().slice(0, 60),
+      }));
+    }
+  } catch {
+    return json(request, env, { error: "The material selections are invalid." }, 400);
+  }
+  const phoneDigits = phone.replace(/\D/g, "");
+  if (
+    !name || name.length > 80 || !emailPattern.test(email) || email.length > 254 ||
+    !/^[+()0-9 .-]{7,24}$/.test(phone) || phoneDigits.length < 7 || phoneDigits.length > 15 ||
+    finishes.length !== 6 || finishes.some((finish) => !finish.label || !finish.name) ||
+    !(image instanceof File) || image.type !== "image/jpeg" || !image.size || image.size > 8_000_000 ||
+    !/^[a-z0-9-]{8,80}$/i.test(submissionId)
+  ) {
+    return json(request, env, { error: "Enter valid contact details, six selections, and a JPEG under 8 MB." }, 400);
+  }
+  if (!(await publicSubmissionAllowed(request, env, "email", 5, 60 * 60 * 1000))) {
+    return json(request, env, { error: "Too many design requests. Try again later." }, 429);
+  }
+  if (!env.RESEND_API_KEY) return json(request, env, { error: "Email delivery is not configured." }, 503);
+
+  const now = new Date();
+  const date = new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone: "America/New_York" }).format(now);
+  const lines = finishes.map(({ label, name: finishName }) => `${label}: ${finishName}`);
+  const attachment = [{
+    filename: `ridgewood-kitchen-design-${now.toISOString().slice(0, 10)}.jpg`,
+    content: bytesToBase64(new Uint8Array(await image.arrayBuffer())),
+  }];
+  const escapedLines = finishes.map(({ label, name: finishName }) =>
+    `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(finishName)}</li>`).join("");
+  const manager = await sendEmail(env, {
+    to: [env.LEAD_NOTIFICATION_EMAIL || "ridgewoodhomeimprovement@gmail.com"],
+    subject: `New Kitchen Studio lead — ${name}`,
+    reply_to: email,
+    text: [`${name} saved a Kitchen Studio design and requested a copy.`, "", `Name: ${name}`, `Email: ${email}`, `Phone: ${phone}`, `Date: ${date}`, "", ...lines].join("\n"),
+    html: `<p><strong>${escapeHtml(name)}</strong> saved a Kitchen Studio design and requested a copy.</p><p><strong>Name:</strong> ${escapeHtml(name)}<br><strong>Email:</strong> ${escapeHtml(email)}<br><strong>Phone:</strong> ${escapeHtml(phone)}<br><strong>Date:</strong> ${escapeHtml(date)}</p><ul>${escapedLines}</ul>`,
+    attachments: attachment,
+  }, `kitchen-lead-${submissionId}`);
+  if (!manager.ok) {
+    return json(request, env, { error: "We could not notify Ridgewood. Your download has not started; please try again.", leadNotified: false, customerEmailed: false }, 502);
+  }
+
+  const customer = await sendEmail(env, {
+    to: [email],
+    subject: "Your Ridgewood Kitchen Studio design",
+    text: [`Hi ${name},`, "", "Your Ridgewood Kitchen Studio design is attached.", "", ...lines, "", "Request a consultation: https://ridgewoodhomeimprovement.com/#contact"].join("\n"),
+    html: `<p>Hi ${escapeHtml(name)},</p><p>Your Ridgewood Kitchen Studio design is attached.</p><ul>${escapedLines}</ul><p><a href="https://ridgewoodhomeimprovement.com/#contact">Request a consultation</a></p>`,
+    attachments: attachment,
+  }, `kitchen-customer-${submissionId}`);
+  return json(request, env, { leadNotified: true, customerEmailed: customer.ok });
+}
+
+function sendEmail(env: Env, payload: Record<string, unknown>, idempotencyKey?: string) {
+  return fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+    },
+    body: JSON.stringify({
+      from: env.RESEND_FROM_EMAIL || "Kitchen Studio <onboarding@resend.dev>",
+      ...payload,
     }),
   });
-  if (!response.ok) return json(request, env, { error: "The email could not be sent." }, 502);
-  return json(request, env, { sent: true });
 }
 
 async function submitKitchen(request: Request, env: Env) {

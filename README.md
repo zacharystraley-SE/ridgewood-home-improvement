@@ -4,13 +4,12 @@ Professional home improvement website for kitchen remodeling, bathroom remodelin
 
 ## Live Site
 
-Visit the live website at: `https://yourusername.github.io/ridgewood-home-improvement`
-
-(Replace `yourusername` with your actual GitHub username)
+Visit [ridgewoodhomeimprovement.com](https://ridgewoodhomeimprovement.com) or open the [Kitchen Studio](https://ridgewoodhomeimprovement.com/kitchen-studio/).
 
 ## Files
 
 - **index.html** - Complete website (HTML, CSS, JavaScript all in one file)
+- **AUTOMATIONS.md** - Forms, email, storage, and deployment reference
 - **README.md** - This file
 - **.gitignore** - Tells Git which files to ignore
 
@@ -26,13 +25,9 @@ Edit `index.html` directly to make changes:
 
 ## Deploying Updates
 
-1. Edit `index.html` locally
-2. Test in your browser
-3. Go to your GitHub repository
-4. Click the file name → click the pencil icon to edit
-5. Paste your updated code
-6. Click "Commit changes"
-7. Your live site updates within seconds
+1. Edit and test locally.
+2. Run `npm test`.
+3. Commit and push to `main`; GitHub Pages and the Kitchen Studio workflow handle deployment.
 
 ## Questions?
 

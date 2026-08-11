@@ -188,7 +188,7 @@ function ManagerApp() {
       <main className="manager-login-shell">
         <a className="manager-back" href="./">Return to Kitchen Studio</a>
         <section className="manager-login" aria-labelledby="login-title">
-          <span className="brand-mark">K</span>
+          <img className="manager-brand-logo" src={`${import.meta.env.BASE_URL}brand/rhi-roof-mark.png`} alt="Ridgewood Home Improvement" />
           <h1 id="login-title">Studio management</h1>
           <p>Sign in to maintain Ridgewood’s customer-facing kitchen finishes.</p>
           <form onSubmit={login}>
@@ -209,7 +209,7 @@ function ManagerApp() {
   return (
     <main className="manager-shell">
       <header className="manager-header">
-        <a className="brand" href="./"><span className="brand-mark">K</span><span>Kitchen Studio</span></a>
+        <a className="brand" href="./"><img className="brand-logo" src={`${import.meta.env.BASE_URL}brand/rhi-roof-mark.png`} alt="" /><span>Kitchen Studio</span></a>
         <div>
           <a className="quiet-button manager-view-link" href="./">View customer studio</a>
           <button className="quiet-button" onClick={() => {

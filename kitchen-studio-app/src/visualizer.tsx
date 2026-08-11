@@ -1,8 +1,12 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { KitchenScenePhoto } from "./kitchen-scene-photo";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  KITCHEN_BASE_IMAGE,
+  KitchenScenePhoto,
+  resolveSceneLayers,
+} from "./kitchen-scene-photo";
 import { api, type CategoryId, type Material } from "./api";
 
 type MaterialOption = {
@@ -558,11 +562,111 @@ function KitchenScene({
 const storageKey = "kitchen-studio-guest-design-v1";
 const legacyStorageKey = "forma-guest-design-v1";
 const maxBrowserUploadBytes = 900_000;
+const brandMark = `${import.meta.env.BASE_URL}brand/rhi-roof-mark.png`;
 
 function getOption(categories: Category[], categoryId: CategoryId, optionId: string) {
   return categories
     .find((category) => category.id === categoryId)
     ?.options.find((option) => option.id === optionId);
+}
+
+function loadImage(source: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`A design layer could not be loaded (${new URL(source, document.baseURI).pathname}). Refresh and try again.`));
+    image.src = source;
+  });
+}
+
+function fitText(context: CanvasRenderingContext2D, value: string, maxWidth: number) {
+  if (context.measureText(value).width <= maxWidth) return value;
+  let shortened = value;
+  while (shortened.length > 1 && context.measureText(`${shortened}…`).width > maxWidth) {
+    shortened = shortened.slice(0, -1);
+  }
+  return `${shortened}…`;
+}
+
+async function createDesignImage(
+  selections: Selections,
+  categories: Category[],
+  details: Array<{ label: string; option: MaterialOption }>,
+) {
+  const layerPaths = resolveSceneLayers(selections, categories).map(({ path }) => path);
+  const [base, mark, ...layers] = await Promise.all([
+    loadImage(KITCHEN_BASE_IMAGE),
+    loadImage(brandMark),
+    ...layerPaths.map(loadImage),
+  ]);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1536;
+  canvas.height = 1400;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("This browser could not prepare the design image.");
+
+  context.fillStyle = "#f7f8f6";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(base, 0, 0, 1536, 1024);
+  layers.forEach((layer) => context.drawImage(layer, 0, 0, 1536, 1024));
+
+  context.fillStyle = "#021f48";
+  context.fillRect(0, 1024, 1536, 5);
+  context.drawImage(mark, 64, 1060, 185, 68);
+  context.fillStyle = "#021f48";
+  context.font = '700 30px "Avenir Next", Arial, sans-serif';
+  context.fillText("KITCHEN STUDIO", 280, 1092);
+  context.font = '22px "Avenir Next", Arial, sans-serif';
+  context.fillStyle = "#586b80";
+  context.fillText("My saved material palette", 280, 1122);
+  context.textAlign = "right";
+  context.fillText(
+    new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" }).format(new Date()),
+    1472,
+    1096,
+  );
+  context.textAlign = "left";
+
+  details.forEach(({ label, option }, index) => {
+    const column = index % 3;
+    const row = Math.floor(index / 3);
+    const x = 64 + column * 490;
+    const y = 1170 + row * 104;
+    const swatch = /^#[0-9a-f]{6}$/i.test(option.swatch) ? option.swatch : "#778da9";
+    context.fillStyle = swatch;
+    context.beginPath();
+    context.arc(x + 25, y + 28, 22, 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = "rgba(2,31,72,0.18)";
+    context.stroke();
+    context.fillStyle = "#586b80";
+    context.font = '700 16px "Avenir Next", Arial, sans-serif';
+    context.fillText(label.toUpperCase(), x + 62, y + 18);
+    context.fillStyle = "#021f48";
+    context.font = '27px Georgia, "Times New Roman", serif';
+    context.fillText(fitText(context, option.name, 365), x + 62, y + 50);
+  });
+
+  return new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error("The design image could not be created.")),
+      "image/jpeg",
+      0.9,
+    ),
+  );
+}
+
+function downloadDesignImage(image: Blob) {
+  const date = new Date().toISOString().slice(0, 10);
+  const url = URL.createObjectURL(image);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `ridgewood-kitchen-design-${date}.jpg`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function prepareKitchenPhoto(photo: File) {
@@ -605,6 +709,8 @@ export function KitchenVisualizer() {
   const [saveComplete, setSaveComplete] = useState(false);
   const [saveSending, setSaveSending] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [designImage, setDesignImage] = useState<Blob | null>(null);
+  const saveSubmissionId = useRef(crypto.randomUUID());
   const [uploadSending, setUploadSending] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadName, setUploadName] = useState("");
@@ -612,6 +718,8 @@ export function KitchenVisualizer() {
   const [savedDesign, setSavedDesign] = useState<{
     email: string;
     name: string;
+    phone: string;
+    customerEmailed: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -658,6 +766,7 @@ export function KitchenVisualizer() {
       const parsed = JSON.parse(stored) as {
         email?: unknown;
         name?: unknown;
+        phone?: unknown;
         selections?: Partial<Selections>;
       } & Partial<Selections>;
       const savedSelections = {
@@ -667,7 +776,12 @@ export function KitchenVisualizer() {
       const frame = window.requestAnimationFrame(() => {
         setSelections(savedSelections);
         if (typeof parsed.email === "string" && typeof parsed.name === "string") {
-          setSavedDesign({ email: parsed.email, name: parsed.name });
+          setSavedDesign({
+            email: parsed.email,
+            name: parsed.name,
+            phone: typeof parsed.phone === "string" ? parsed.phone : "",
+            customerEmailed: true,
+          });
         }
       });
       return () => window.cancelAnimationFrame(frame);
@@ -761,36 +875,46 @@ export function KitchenVisualizer() {
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "").trim();
     const name = String(form.get("name") ?? "").trim();
-    if (!email || !name) return;
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({ email, name, selections }),
-    );
-    setSavedDesign({ email, name });
+    const phone = String(form.get("phone") ?? "").trim();
+    if (!email || !name || !phone) return;
     setSaveSending(true);
     setSaveError("");
     try {
-      await api("/save-design", {
+      const image = await createDesignImage(selections, categories, selectedDetails);
+      const finishes = selectedDetails.map(({ label, option }) => ({
+        label,
+        name: option.name,
+      }));
+      const payload = new FormData();
+      payload.set("submission_id", saveSubmissionId.current);
+      payload.set("name", name);
+      payload.set("email", email);
+      payload.set("phone", phone);
+      payload.set("finishes", JSON.stringify(finishes));
+      payload.set("image", image, "ridgewood-kitchen-design.jpg");
+      const result = await api<{ leadNotified: boolean; customerEmailed: boolean }>("/save-design", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name,
-          finishes: selectedDetails.map(({ label, option }) => ({
-            label,
-            name: option.name,
-          })),
-        }),
+        body: payload,
       });
-    } catch {
-      setSaveError(
-        "Your design is saved on this device, but the email could not be sent. Check the address and try again.",
+      if (!result.leadNotified) throw new Error("Ridgewood could not be notified.");
+      window.localStorage.setItem(
+        storageKey,
+        JSON.stringify({ email, name, phone, selections }),
       );
-      return;
+      setSavedDesign({ email, name, phone, customerEmailed: result.customerEmailed });
+      setDesignImage(image);
+      downloadDesignImage(image);
+      setSaveComplete(true);
+      saveSubmissionId.current = crypto.randomUUID();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Your design could not be delivered. Check your information and try again.",
+      );
     } finally {
       setSaveSending(false);
     }
-    setSaveComplete(true);
   }
 
   async function submitKitchen(event: FormEvent<HTMLFormElement>) {
@@ -823,7 +947,7 @@ export function KitchenVisualizer() {
     <main className="app-shell">
       <header className="topbar">
         <a className="brand" href="#studio" aria-label="Kitchen Studio home">
-          <span className="brand-mark">K</span>
+          <img className="brand-logo" src={brandMark} alt="" />
           <span>Kitchen Studio</span>
         </a>
         <div className="project-name">
@@ -838,10 +962,10 @@ export function KitchenVisualizer() {
             How it works
           </button>
           <button className="quiet-button" onClick={() => setQuoteOpen(true)}>
-            Request a quote
+            Request a consultation
           </button>
-          <button className="primary-button" onClick={() => { setSaveComplete(false); setSaveError(""); setSaveOpen(true); }}>
-            Save design
+          <button className="primary-button" onClick={() => { setSaveComplete(false); setSaveError(""); setDesignImage(null); setSaveOpen(true); }}>
+            Save my design
           </button>
         </nav>
       </header>
@@ -1025,51 +1149,75 @@ export function KitchenVisualizer() {
             <button className="dialog-close" onClick={() => setSaveOpen(false)} aria-label="Close save dialog">×</button>
             {!saveComplete ? (
               <>
-                <p className="eyebrow">Save this palette</p>
-                <h2 id="save-title">Keep this kitchen close.</h2>
+                <p className="eyebrow">Save your design</p>
+                <h2 id="save-title">Send your kitchen design.</h2>
                 <p className="dialog-copy">
-                  Enter an email and name. We’ll save this design on this device
-                  and email you a copy of the palette.
+                  We’ll prepare an image of your finished kitchen, email it to
+                  you, and save a copy to this device.
                 </p>
                 <form onSubmit={saveDesign}>
+                  <label>
+                    Full name
+                    <input
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      defaultValue={savedDesign?.name ?? ""}
+                      maxLength={80}
+                      required
+                      autoFocus
+                    />
+                  </label>
                   <label>
                     Email address
                     <input
                       name="email"
                       type="email"
                       placeholder="you@example.com"
+                      autoComplete="email"
                       defaultValue={savedDesign?.email ?? ""}
+                      maxLength={254}
                       required
-                      autoFocus
                     />
                   </label>
                   <label>
-                    Design name
+                    Phone number
                     <input
-                      name="name"
-                      type="text"
-                      defaultValue={savedDesign?.name ?? "Stone House Kitchen"}
+                      name="phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="(201) 555-0123"
+                      defaultValue={savedDesign?.phone ?? ""}
+                      minLength={7}
+                      maxLength={24}
                       required
                     />
                   </label>
                   <button className="primary-button full-button" type="submit" disabled={saveSending}>
-                    {saveSending ? "Sending…" : "Save and email design"}
+                    {saveSending ? "Preparing your design…" : "Email & download my design"}
                   </button>
                 </form>
                 {saveError && <p className="form-error" role="alert">{saveError}</p>}
-                <small className="privacy-note">Your material selections are included in the email.</small>
+                <small className="privacy-note">
+                  By requesting your design, you agree that Ridgewood Home Improvement may contact you about your kitchen project.
+                </small>
               </>
             ) : (
               <div className="success-state">
                 <span className="success-mark">✓</span>
-                <p className="eyebrow">Saved and emailed</p>
-                <h2 id="save-title">{savedDesign?.name ?? "Your palette"} is on its way.</h2>
+                <p className="eyebrow">Design ready</p>
+                <h2 id="save-title">Your kitchen design is ready.</h2>
                 <p>
-                  We sent the palette to <strong>{savedDesign?.email}</strong>.
-                  Return in this browser and the studio will also restore every
-                  material selection.
+                  We downloaded a copy{savedDesign?.customerEmailed ? <> and emailed it to <strong>{savedDesign.email}</strong></> : null}.
+                  {savedDesign?.customerEmailed
+                    ? " Ridgewood Home Improvement may follow up to help with your selections."
+                    : " The emailed copy could not be delivered, but Ridgewood received your request."}
                 </p>
-                <button className="primary-button" onClick={() => setSaveOpen(false)}>Keep designing</button>
+                <div className="success-actions">
+                  <button className="primary-button" onClick={() => designImage && downloadDesignImage(designImage)}>Download image again</button>
+                  <button className="quiet-button" onClick={() => setSaveOpen(false)}>Keep designing</button>
+                </div>
               </div>
             )}
           </section>

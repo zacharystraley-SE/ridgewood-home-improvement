@@ -1,5 +1,5 @@
 :root {
-  --ink: #0d1b2a;
+  --ink: #021f48;
   --navy: #1b263b;
   --steel: #415a77;
   --mist: #778da9;
@@ -10,7 +10,8 @@
   --clay: #415a77;
   --clay-dark: #1b263b;
   --sage: #778da9;
-  --shadow: 0 20px 60px rgba(13, 27, 42, 0.16);
+  --brand-gold: #d4a61f;
+  --shadow: 0 20px 60px rgba(2, 31, 72, 0.16);
 }
 
 * {
@@ -75,18 +76,11 @@ button {
   text-transform: uppercase;
 }
 
-.brand-mark {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: Georgia, serif;
-  font-size: 17px;
-  font-style: italic;
-  letter-spacing: 0;
+.brand-logo {
+  display: block;
+  width: 54px;
+  height: auto;
+  flex: 0 0 auto;
 }
 
 .project-name {
@@ -150,8 +144,15 @@ button {
 }
 
 .primary-button:hover {
-  background: #39423f;
+  background: var(--navy);
   transform: translateY(-1px);
+}
+
+.quiet-button:focus-visible,
+.primary-button:focus-visible,
+.brand:focus-visible {
+  outline: 3px solid var(--brand-gold);
+  outline-offset: 3px;
 }
 
 .primary-button:disabled {
@@ -895,6 +896,17 @@ button {
   line-height: 1.7;
 }
 
+.success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.success-actions .quiet-button {
+  min-height: 42px;
+}
+
 .quote-dialog {
   width: min(700px, 100%);
 }
@@ -1058,9 +1070,8 @@ button {
     font-size: 14px;
   }
 
-  .brand-mark {
-    width: 30px;
-    height: 30px;
+  .brand-logo {
+    width: 42px;
   }
 
   .top-actions {
@@ -1241,6 +1252,12 @@ button {
   padding: 48px;
   background: var(--paper);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.manager-brand-logo {
+  display: block;
+  width: 180px;
+  height: auto;
 }
 
 .manager-login h1,

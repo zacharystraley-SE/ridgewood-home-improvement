@@ -22,7 +22,7 @@ type KitchenScenePhotoProps = {
 };
 
 const ASSET_ROOT = `${import.meta.env.BASE_URL}kitchen-renders/compositor`;
-const BASE_IMAGE = `${ASSET_ROOT}/base.jpg`;
+export const KITCHEN_BASE_IMAGE = `${ASSET_ROOT}/base.jpg`;
 
 const PHOTO_LAYER_ORDER: CategoryId[] = [
   "walls",
@@ -98,11 +98,36 @@ const HIT_ORDER: CategoryId[] = [
 ];
 
 const PRELOAD_PATHS = [
-  BASE_IMAGE,
+  KITCHEN_BASE_IMAGE,
   ...PHOTO_LAYER_ORDER.flatMap((category) => Object.values(PHOTO_LAYERS[category])),
   ...Object.values(FLOOR_EDGE_LAYERS),
   ...Object.values(MASKS),
 ];
+
+export function resolveSceneLayers(
+  selections: Selections,
+  categories: Category[],
+  baseUri = document.baseURI,
+) {
+  const surfaces = PHOTO_LAYER_ORDER.flatMap((category) => {
+    const managed = categories
+      .find((item) => item.id === category)
+      ?.options.find((option) => option.id === selections[category]);
+    const path = managed?.layerUrl
+      ? new URL(managed.layerUrl, baseUri).href
+      : PHOTO_LAYERS[category][selections[category]];
+    return path ? [{ category, path }] : [];
+  });
+  const managedFloor = categories
+    .find((item) => item.id === "flooring")
+    ?.options.find((option) => option.id === selections.flooring);
+  const floorEdge = managedFloor?.edgeLayerUrl
+    ? new URL(managedFloor.edgeLayerUrl, baseUri).href
+    : FLOOR_EDGE_LAYERS[selections.flooring];
+  return floorEdge
+    ? [...surfaces, { category: "flooring" as const, path: floorEdge }]
+    : surfaces;
+}
 
 export function KitchenScenePhoto({
   selections,
@@ -159,24 +184,7 @@ export function KitchenScenePhoto({
   }, []);
 
   const activeLayers = useMemo(() => {
-    const surfaces = PHOTO_LAYER_ORDER.flatMap((category) => {
-      const managed = categories
-        .find((item) => item.id === category)
-        ?.options.find((option) => option.id === selections[category]);
-      const path = managed?.layerUrl
-        ? new URL(managed.layerUrl, document.baseURI).href
-        : PHOTO_LAYERS[category][selections[category]];
-      return path ? [{ category, path }] : [];
-    });
-    const managedFloor = categories
-      .find((item) => item.id === "flooring")
-      ?.options.find((option) => option.id === selections.flooring);
-    const floorEdge = managedFloor?.edgeLayerUrl
-      ? new URL(managedFloor.edgeLayerUrl, document.baseURI).href
-      : FLOOR_EDGE_LAYERS[selections.flooring];
-    return floorEdge
-      ? [...surfaces, { category: "flooring" as const, path: floorEdge }]
-      : surfaces;
+    return resolveSceneLayers(selections, categories);
   }, [categories, selections]);
 
   function selectSurface(event: PointerEvent<HTMLDivElement>) {
@@ -218,7 +226,7 @@ export function KitchenScenePhoto({
     >
       <img
         className="photo-base"
-        src={BASE_IMAGE}
+        src={KITCHEN_BASE_IMAGE}
         alt="Photoreal kitchen with a wide island and fixed camera view"
         draggable={false}
       />

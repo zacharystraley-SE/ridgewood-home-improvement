@@ -20,11 +20,12 @@
         }
 
         :root {
-            --navy-dark: #0a1f36;
+            --navy-dark: #021f48;
             --navy-medium: #0d3b5a;
             --navy-light: #1a5a7a;
             --accent-blue: #2b7ab8;
             --accent-green: #3d8b59;
+            --brand-gold: #d4a61f;
             --text-dark: #171717;
             --text-light: #4f5b66;
             --bg-light: #f8f9fa;
@@ -47,8 +48,7 @@
             letter-spacing: -0.01em;
         }
 
-        nav a,
-        .btn-phone,
+        .site-nav a,
         .btn-quote,
         .btn-primary,
         .btn-secondary,
@@ -113,32 +113,36 @@
         }
 
         .logo {
-            font-size: clamp(20px, 2.2vw, 24px);
-            font-weight: bold;
-            color: var(--white);
             text-decoration: none;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            flex: 0 0 auto;
         }
 
-        nav {
+        .logo img {
+            display: block;
+            width: 172px;
+            height: auto;
+        }
+
+        .site-nav {
             display: flex;
-            gap: 30px;
+            gap: 24px;
             align-items: center;
         }
 
-        nav a {
+        .site-nav a {
             color: var(--white);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 700;
             text-transform: uppercase;
             transition: color 0.3s;
         }
 
-        nav a:hover {
-            color: var(--accent-blue);
+        .site-nav a:hover,
+        .site-nav a:focus-visible {
+            color: var(--brand-gold);
         }
 
         .dropdown {
@@ -173,25 +177,46 @@
             background: var(--navy-light);
         }
 
+        .nav-toggle {
+            display: none;
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        .nav-toggle span,
+        .nav-toggle::before,
+        .nav-toggle::after {
+            display: block;
+            width: 22px;
+            height: 2px;
+            margin: 5px auto;
+            background: currentColor;
+            content: '';
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .nav-toggle[aria-expanded="true"] span {
+            opacity: 0;
+        }
+
+        .nav-toggle[aria-expanded="true"]::before {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .nav-toggle[aria-expanded="true"]::after {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
         .cta-header {
             display: flex;
             gap: 15px;
             align-items: center;
-        }
-
-        .btn-phone {
-            background: var(--accent-blue);
-            color: var(--white);
-            padding: 10px 20px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .btn-phone:hover {
-            background: var(--navy-light);
         }
 
         .btn-quote {
@@ -210,6 +235,59 @@
 
         .btn-quote:hover {
             background: #2d6b47;
+        }
+
+        .btn-quote:focus-visible,
+        .nav-toggle:focus-visible,
+        .site-nav a:focus-visible,
+        .logo:focus-visible {
+            outline: 3px solid var(--brand-gold);
+            outline-offset: 3px;
+        }
+
+        .mobile-consultation {
+            display: none;
+        }
+
+        .form-success {
+            position: fixed;
+            top: 132px;
+            right: 24px;
+            z-index: 1200;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 3px 18px;
+            max-width: 430px;
+            padding: 18px 20px;
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--text-dark);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+        }
+
+        .form-success[hidden] {
+            display: none;
+        }
+
+        .form-success strong {
+            color: var(--navy-dark);
+        }
+
+        .form-success span {
+            grid-column: 1;
+            color: var(--text-light);
+        }
+
+        .form-success button {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            align-self: start;
+            border: 0;
+            background: transparent;
+            color: var(--navy-dark);
+            cursor: pointer;
+            font-size: 24px;
+            line-height: 1;
         }
 
         /* Hero Section */
@@ -596,7 +674,7 @@
             background: var(--bg-light);
             padding: 30px;
             border-radius: 8px;
-            border-left: 4px solid var(--accent-blue);
+            border: 1px solid rgba(2, 31, 72, 0.12);
         }
 
         .testimonial-text {
@@ -803,6 +881,8 @@
             width: 90%;
             box-shadow: 0 5px 30px rgba(0,0,0,0.3);
             position: relative;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
         }
 
         .modal-close {
@@ -813,6 +893,9 @@
             font-weight: bold;
             cursor: pointer;
             color: var(--text-light);
+            border: 0;
+            background: transparent;
+            line-height: 1;
         }
 
         .modal-close:hover {
@@ -820,10 +903,67 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            nav {
-                display: none;
+        @media (max-width: 1120px) {
+            .header-main {
+                position: relative;
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                gap: 16px;
             }
+
+            .site-nav {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                left: 0;
+                display: none;
+                align-items: stretch;
+                gap: 0;
+                padding: 14px 24px 22px;
+                background: var(--navy-dark);
+                box-shadow: 0 18px 35px rgba(0, 0, 0, 0.2);
+            }
+
+            .site-nav.is-open {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .site-nav > a,
+            .dropdown > a {
+                display: block;
+                padding: 12px 4px;
+            }
+
+            .dropdown-content,
+            .dropdown:hover .dropdown-content {
+                position: static;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                margin: 0;
+                padding: 0 0 8px 14px;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .dropdown-content a {
+                padding: 8px 4px;
+                font-size: 14px;
+            }
+
+            .nav-toggle {
+                display: block;
+                grid-column: 3;
+            }
+
+            .cta-header {
+                justify-self: end;
+            }
+        }
+
+        @media (max-width: 768px) {
 
             .header-top {
                 padding: 8px 0;
@@ -843,25 +983,24 @@
             }
 
             .header-main {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
-                align-items: center;
+                padding: 10px 20px;
             }
 
-            .cta-header {
-                flex-direction: row;
-                gap: 10px;
-                width: 100%;
-                justify-content: center;
+            .logo img {
+                width: 145px;
             }
 
-            .btn-phone, .btn-quote {
-                flex: 1;
+            .btn-quote {
                 text-align: center;
-                font-size: 12px;
+                font-size: 11px;
                 padding: 10px 12px;
-                max-width: 180px;
+            }
+
+            .form-success {
+                top: 16px;
+                right: 16px;
+                left: 16px;
+                max-width: none;
             }
 
             .contact-content {
@@ -885,14 +1024,28 @@
                 word-break: break-all;
             }
 
-            .btn-phone, .btn-quote {
-                font-size: 11px;
-                padding: 9px 10px;
+            .cta-header {
+                display: none;
+            }
+
+            .mobile-consultation {
+                display: block;
+                margin-top: 10px;
+                padding: 13px 14px !important;
+                border-radius: 4px;
+                background: var(--accent-green);
+                text-align: center;
             }
         }
     </style>
 </head>
 <body>
+
+    <div class="form-success" id="formSuccess" role="status" hidden>
+        <strong>Thank you for reaching out.</strong>
+        <span>Your request was sent to Ridgewood Home Improvement. We’ll be in touch soon.</span>
+        <button type="button" aria-label="Dismiss confirmation" onclick="dismissFormSuccess()">&times;</button>
+    </div>
 
     <!-- Header -->
     <header>
@@ -909,8 +1062,10 @@
             </div>
         </div>
         <div class="header-main">
-            <a href="#" class="logo">🏠 Ridgewood</a>
-            <nav>
+            <a href="#home" class="logo" aria-label="Ridgewood Home Improvement home">
+                <img src="/brand/rhi-header-lockup.webp" alt="Ridgewood Home Improvement" width="1200" height="558">
+            </a>
+            <nav class="site-nav" id="siteNav" aria-label="Primary navigation">
                 <a href="#home">Home</a>
                 <a href="#why-us">Why Us</a>
                 <div class="dropdown">
@@ -928,11 +1083,12 @@
                 <a href="/kitchen-studio/">Kitchen Studio</a>
                 <a href="#portfolio">Portfolio</a>
                 <a href="#contact">Contact</a>
+                <a href="#contact" class="mobile-consultation" onclick="openModal(); closeMenu(); return false;">Request a Consultation</a>
             </nav>
             <div class="cta-header">
-                <a href="tel:(201)220-2029" class="btn-phone">CALL US 24/7</a>
-                <button class="btn-quote" onclick="openModal()">REQUEST A QUOTE</button>
+                <button class="btn-quote" onclick="openModal()">REQUEST A CONSULTATION</button>
             </div>
+            <button class="nav-toggle" type="button" aria-label="Open navigation" aria-controls="siteNav" aria-expanded="false" onclick="toggleMenu(this)"><span></span></button>
         </div>
     </header>
 
@@ -1233,11 +1389,11 @@
         </div>
     </footer>
 
-    <!-- Quote Request Modal -->
-    <div class="modal" id="quoteModal">
+    <!-- Consultation Request Modal -->
+    <div class="modal" id="quoteModal" role="dialog" aria-modal="true" aria-labelledby="consultationTitle">
         <div class="modal-content">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            <h2 style="color: var(--text-dark); margin-bottom: 25px;">Request a Free Consultation</h2>
+            <button type="button" class="modal-close" onclick="closeModal()" aria-label="Close consultation form">&times;</button>
+            <h2 id="consultationTitle" style="color: var(--text-dark); margin-bottom: 25px;">Request a Free Consultation</h2>
             <form action="https://api.web3forms.com/submit" method="POST">
                 <input type="hidden" name="access_key" value="d9c52626-8ab2-453e-9cd5-9414dc9827cb">
                 <input type="hidden" name="subject" value="New Consultation Request from Ridgewood Website">
@@ -1277,7 +1433,6 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="emailjs.min.js"></script>
     <script>
         let currentSlide = 0;
         const slides = document.querySelectorAll('.hero-slide');
@@ -1322,65 +1477,83 @@
 
         autoRotateInterval = setInterval(autoRotate, 5000);
 
+        let modalOpener = null;
+
         function openModal() {
-            document.getElementById('quoteModal').classList.add('active');
+            closeMenu();
+            modalOpener = document.activeElement;
+            const modal = document.getElementById('quoteModal');
+            modal.classList.add('active');
+            modal.querySelector('input[name="name"]').focus();
         }
 
         function closeModal() {
             document.getElementById('quoteModal').classList.remove('active');
+            if (modalOpener) modalOpener.focus();
         }
 
         window.onclick = function(event) {
             const modal = document.getElementById('quoteModal');
             if (event.target == modal) {
-                modal.classList.remove('active');
+                closeModal();
             }
         }
 
-        function handleQuoteSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            
-            if (typeof emailjs === 'undefined') {
-                alert('Email service is loading. Please try again in a moment.');
-                return;
-            }
-            
-            emailjs.sendForm('service_fqxjqto', 'template_tvb5by4', form)
-                .then(function() {
-                    alert('Thank you for your request! We will contact you soon.');
-                    form.reset();
-                    closeModal();
-                }, function(error) {
-                    alert('Error submitting form. Please try again.');
-                    console.error('EmailJS error:', error);
-                });
+        function toggleMenu(button) {
+            const nav = document.getElementById('siteNav');
+            const isOpen = button.getAttribute('aria-expanded') === 'true';
+            button.setAttribute('aria-expanded', String(!isOpen));
+            button.setAttribute('aria-label', isOpen ? 'Open navigation' : 'Close navigation');
+            nav.classList.toggle('is-open', !isOpen);
         }
 
-        function handleFormSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            
-            if (typeof emailjs === 'undefined') {
-                alert('Email service is loading. Please try again in a moment.');
-                return;
-            }
-            
-            emailjs.sendForm('service_fqxjqto', 'template_tvb5by4', form)
-                .then(function() {
-                    alert('Thank you for contacting us! We will get back to you soon.');
-                    form.reset();
-                }, function(error) {
-                    alert('Error submitting form. Please try again.');
-                    console.error('EmailJS error:', error);
-                });
+        function closeMenu() {
+            const nav = document.getElementById('siteNav');
+            const button = document.querySelector('.nav-toggle');
+            nav.classList.remove('is-open');
+            button.setAttribute('aria-expanded', 'false');
+            button.setAttribute('aria-label', 'Open navigation');
         }
+
+        function dismissFormSuccess() {
+            document.getElementById('formSuccess').hidden = true;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('submitted') === 'true') {
+            document.getElementById('formSuccess').hidden = false;
+            params.delete('submitted');
+            const cleanUrl = `${window.location.pathname}${params.size ? `?${params}` : ''}${window.location.hash}`;
+            window.history.replaceState({}, '', cleanUrl);
+        }
+
+        document.addEventListener('keydown', event => {
+            const modal = document.getElementById('quoteModal');
+            if (event.key === 'Escape') {
+                closeMenu();
+                if (modal.classList.contains('active')) closeModal();
+            }
+            if (event.key === 'Tab' && modal.classList.contains('active')) {
+                const focusable = [...modal.querySelectorAll('button, input, select, textarea')]
+                    .filter(element => !element.disabled);
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            }
+        });
 
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
+                    closeMenu();
                     target.scrollIntoView({
                         behavior: 'smooth',
                         block: 'start'
