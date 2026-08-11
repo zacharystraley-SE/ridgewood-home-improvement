@@ -14,8 +14,7 @@ bucket_name = "ridgewood-kitchen-studio-assets"
 
 [vars]
 ALLOWED_ORIGINS = "https://ridgewoodhomeimprovement.com,https://www.ridgewoodhomeimprovement.com,http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173"
-# ponytail: switch to studio@ridgewoodhomeimprovement.com after Namecheap verifies the Resend DNS records.
-RESEND_FROM_EMAIL = "Kitchen Studio <onboarding@resend.dev>"
+RESEND_FROM_EMAIL = "Kitchen Studio <studio@ridgewoodhomeimprovement.com>"
 LEAD_NOTIFICATION_EMAIL = "ridgewoodhomeimprovement@gmail.com"
 
 [triggers]
