@@ -704,7 +704,6 @@ export function KitchenVisualizer() {
   const [zoom, setZoom] = useState(1);
   const [saveOpen, setSaveOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [quoteOpen, setQuoteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [saveComplete, setSaveComplete] = useState(false);
   const [saveSending, setSaveSending] = useState(false);
@@ -723,7 +722,7 @@ export function KitchenVisualizer() {
   } | null>(null);
 
   useEffect(() => {
-    if (!saveOpen && !uploadOpen && !quoteOpen) return;
+    if (!saveOpen && !uploadOpen) return;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = document.querySelector<HTMLElement>('.dialog[role="dialog"]');
     const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(
@@ -734,7 +733,6 @@ export function KitchenVisualizer() {
       if (event.key === "Escape") {
         setSaveOpen(false);
         setUploadOpen(false);
-        setQuoteOpen(false);
         return;
       }
       if (event.key !== "Tab") return;
@@ -755,7 +753,7 @@ export function KitchenVisualizer() {
       document.removeEventListener("keydown", onKeyDown);
       previous?.focus();
     };
-  }, [saveOpen, uploadOpen, quoteOpen]);
+  }, [saveOpen, uploadOpen]);
 
   useEffect(() => {
     const stored =
@@ -964,9 +962,9 @@ export function KitchenVisualizer() {
               </button>
             </div>
             <div className="top-commitments">
-              <button className="quiet-button consultation-button" onClick={() => setQuoteOpen(true)}>
+              <a className="quiet-button consultation-button" href="https://ridgewoodhomeimprovement.com/#contact">
                 Request a consultation
-              </button>
+              </a>
               <button className="primary-button" onClick={() => { setSaveComplete(false); setSaveError(""); setDesignImage(null); setSaveOpen(true); }}>
                 Save my design
               </button>
@@ -1289,37 +1287,6 @@ export function KitchenVisualizer() {
         </div>
       )}
 
-      {quoteOpen && (
-        <div className="dialog-backdrop" role="presentation" onMouseDown={() => setQuoteOpen(false)}>
-          <section
-            className="dialog quote-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="quote-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <button className="dialog-close" onClick={() => setQuoteOpen(false)} aria-label="Close quote dialog">×</button>
-            <p className="eyebrow">Your choice, your timing</p>
-            <h2 id="quote-title">Bring this palette to a professional.</h2>
-            <p className="dialog-copy">
-              Continue to Ridgewood’s consultation form to discuss this palette
-              with the remodeling team.
-            </p>
-            <div className="quote-palette">
-              {selectedDetails.map(({ label, option }) => (
-                <div key={label}>
-                  <span style={{ background: option.swatch }} />
-                  <small>{label}</small>
-                  <strong>{option.name}</strong>
-                </div>
-              ))}
-            </div>
-            <a className="primary-button full-button" href="/#contact">
-              Start a consultation
-            </a>
-          </section>
-        </div>
-      )}
     </main>
   );
 }
