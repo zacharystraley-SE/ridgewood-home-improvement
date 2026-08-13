@@ -159,10 +159,11 @@
             top: 100%;
             left: 0;
             border-radius: 4px;
-            margin-top: 10px;
+            margin-top: 0;
         }
 
-        .dropdown:hover .dropdown-content {
+        .dropdown:hover .dropdown-content,
+        .dropdown:focus-within .dropdown-content {
             display: flex;
             flex-direction: column;
         }
